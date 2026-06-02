@@ -25,6 +25,7 @@
     "react-hot-toast": "^2.6.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.4.0",
     "@tailwindcss/postcss": "^4.2.4",
     "@types/aos": "^3.0.8",
     "@types/bcryptjs": "^2.4.6",
@@ -36,7 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "postcss": "^8.5.12",
-    "prisma": "5.22.0",
+    "prisma": "^5.22.0",
     "tailwindcss": "^4.2.4",
     "tsx": "^4.21.0",
     "typescript": "^5"

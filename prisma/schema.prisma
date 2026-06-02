@@ -50,6 +50,9 @@ model HewanQurban {
   status_bayar      String   @default("BELUM LUNAS") // LUNAS / DP / BELUM LUNAS
   bukti_bayar       String?
 
+  // --- FITUR BARU: STATUS Pemrosesan Hewan ---
+  status_hewan      String   @default("MENUNGGU") 
+
   penyembelihan     String?
   melihat           Boolean  @default(false)
   menyembelih       Boolean  @default(false)

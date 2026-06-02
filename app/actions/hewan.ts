@@ -174,6 +174,7 @@ export async function updateHewan(id_hewan: string, formData: any) {
         penyaluran_luar: formData.penyaluran_luar === 'YA',
         metode_bayar: formData.metode_bayar || "TUNAI",
         status_bayar: formData.status_bayar || "BELUM LUNAS",
+        status_hewan: formData.status_hewan || "MENUNGGU",
         
         // ✨ SUPER FORM BARU ✨
         nama_shohibul_sapi: formData.nama_shohibul_sapi || null,
@@ -183,6 +184,7 @@ export async function updateHewan(id_hewan: string, formData: any) {
 
     revalidatePath("/admin/hewan");
     revalidatePath("/admin/pengqurban");
+    revalidatePath("/tracking");
     return { success: true, message: "Data hewan qurban berhasil diperbarui!" };
   } catch (error) {
     console.error("Gagal update hewan:", error);

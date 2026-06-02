@@ -27,7 +27,8 @@ export default function HewanActionButtons({ data }: { data: any }) {
     bentuk: "UANG", uang: "", penyembelihan: "", melihat: "TIDAK", menyembelih: "TIDAK",
     jml_bagian: "", pembagian: "", opsi_pesan: "PASRAH", pesan_bagian: "", kel_sapi: "", no_uq: "",
     penyaluran: "DALAM", lokasi: "", keterangan: "", penerima: "", petugas: "", sebab: "",
-    biaya_operasional: "", pindah_sapi: "TIDAK", metode_bayar: "TUNAI", status_bayar: "BELUM LUNAS"
+    biaya_operasional: "", pindah_sapi: "TIDAK", metode_bayar: "TUNAI", status_bayar: "BELUM LUNAS",
+    status_hewan: "MENUNGGU"
   });
 
   const handleChange = (e: any) => setHwn({ ...hwn, [e.target.name]: e.target.value.toUpperCase() });
@@ -73,7 +74,8 @@ export default function HewanActionButtons({ data }: { data: any }) {
       biaya_operasional: item.biaya_operasional?.toString() || "",
       pindah_sapi: item.pindah_sapi ? "YA" : "TIDAK",
       metode_bayar: item.metode_bayar || "TUNAI",
-      status_bayar: item.status_bayar || "BELUM LUNAS"
+      status_bayar: item.status_bayar || "BELUM LUNAS",
+      status_hewan: item.status_hewan || "MENUNGGU"
     });
     setIsEditOpen(true);
   };
@@ -292,6 +294,7 @@ export default function HewanActionButtons({ data }: { data: any }) {
                   <div><p className="text-emerald-200 text-xs">ID Hewan / Kelompok</p><p className="font-bold text-lg">{data.no_id_lama}</p></div>
                   <div><p className="text-emerald-200 text-xs">Jenis</p><p className="font-bold text-lg">{data.jenis_qurban === "1" ? "Kambing 🐐" : "Sapi 🐄"}</p></div>
                   <div><p className="text-emerald-200 text-xs">Penyaluran</p><p className="font-bold text-md">{data.penyaluran || "INTERNAL"}</p></div>
+                  <div><p className="text-emerald-200 text-xs">Status Pemrosesan</p><p className="font-bold text-md uppercase">{data.status_hewan || "MENUNGGU"} ⏳</p></div>
                 </div>
               </div>
 
@@ -338,6 +341,7 @@ export default function HewanActionButtons({ data }: { data: any }) {
                       <p className="text-[10px] text-gray-400 font-bold uppercase">Status Bayar</p>
                       <p className={`font-bold text-sm ${m.status_bayar === 'LUNAS' ? 'text-emerald-600' : 'text-red-500'}`}>{m.status_bayar}</p>
                     </div>
+                    <div className="col-span-2"><p className="text-[10px] text-gray-400 font-bold uppercase">Status Pemrosesan</p><p className="font-bold text-sm text-gray-700 uppercase">{m.status_hewan || "MENUNGGU"}</p></div>
                   </div>
 
                   {/* Tampil 7 Nama kalau Sapi Utuh */}
@@ -407,6 +411,18 @@ export default function HewanActionButtons({ data }: { data: any }) {
                 <div className="grid grid-cols-2 gap-5">
                   <CustomSelect label="Metode Bayar" name="metode_bayar" value={hwn.metode_bayar} options={[{val:"TUNAI", label:"TUNAI 💵"}, {val:"TRANSFER", label:"TRANSFER 💳"}]} />
                   <CustomSelect label="Status Bayar" name="status_bayar" value={hwn.status_bayar} options={[{val:"LUNAS", label:"LUNAS ✅"}, {val:"DP", label:"DP 💰"}, {val:"BELUM LUNAS", label:"BELUM LUNAS ❌"}]} />
+                  <div className="col-span-2">
+                    <CustomSelect 
+                      label="Status Pemrosesan Hewan" 
+                      name="status_hewan" 
+                      value={hwn.status_hewan} 
+                      options={[
+                        {val:"MENUNGGU", label:"WAITING / MENUNGGU ⏳"}, 
+                        {val:"DISEMBELIH", label:"SLAUGHTERED / DISEMBELIH 🔪"}, 
+                        {val:"DIDISTRIBUSIKAN", label:"DISTRIBUTED / DIDISTRIBUSIKAN 📦"}
+                      ]} 
+                    />
+                  </div>
                 </div>
               </div>
 
