@@ -3,6 +3,7 @@
 import { PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getActiveHijriYear } from "@/app/lib/hijri";
+import { getServerSession } from "next-auth";
 
 const prisma = new PrismaClient();
 
@@ -52,7 +53,7 @@ export async function createHewan(formData: any) {
     const generatedNoIdLama = `${hijriYear}${kodeHewan}${seqString}`;
 
     // 💾 1. SIMPAN DATA HEWAN KE DATABASE
-    const newHewan = await prisma.hewanQurban.create({
+    await prisma.hewanQurban.create({
       data: {
         no_id_lama: generatedNoIdLama,
         nkw_pengqurban: formData.nkw_pengqurban,
@@ -148,6 +149,16 @@ export async function createHewan(formData: any) {
 // ==========================================
 export async function updateHewan(id_hewan: string, formData: any) {
   try {
+    const session = await getServerSession();
+    if (!session || !session.user || (session.user as any).role !== "ADMIN") {
+      return { success: false, message: "Akses ditolak: Anda harus login sebagai Admin." };
+    }
+
+    const validStatuses = ["MENUNGGU", "DISEMBELIH", "DIDISTRIBUSIKAN"];
+    if (formData.status_hewan && !validStatuses.includes(formData.status_hewan)) {
+      return { success: false, message: "Status hewan tidak valid." };
+    }
+
     await prisma.hewanQurban.update({
       where: { id_hewan },
       data: {

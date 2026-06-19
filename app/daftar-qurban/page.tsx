@@ -1,17 +1,52 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, ChevronLeft, CheckCircle2, Upload, Save, User, MapPin, Heart, Wallet, Camera, Phone, ChevronDown, Trash2, Plus, Settings, FileText, Edit3, CheckSquare, Info } from "lucide-react";
+import { ChevronRight, ChevronLeft, CheckCircle2, Save, User, MapPin, Heart, Wallet, Camera, Phone, ChevronDown, Trash2, Plus, Settings, FileText, Edit3, CheckSquare, Info } from "lucide-react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react"; // Buat icon loading muter-muter
 import { submitPermohonanOnline } from "@/app/actions/permohonan-online"; // Import mesin yang barusan kita bikin
 
-// ==========================================
-// 🌟 HELPER DATA WILAYAH
-// ==========================================
 const wilayahCodes = ["ITS", "ITSA", "ITSB", "ITSC", "ITSD", "ITSE", "ITSF", "ITSG", "ITSH", "ITSI", "ITSJ", "ITSK", "ITSL", "ITSM", "ITSN", "ITSO", "ITSP", "ITSQ", "ITSR", "ITSS", "ITST", "ITSU", "ITSV", "ITSW", "ITSX", "LUAR"];
 const formatWilayah = (kode: string) => (kode === "ITS" || kode === "LUAR") ? (kode === "ITS" ? "ITS (CIVITAS ACADEMICA)" : "LUAR ITS (UMUM)") : `ITS - BLOK ${kode.replace("ITS", "")}`;
+
+const CustomSelect = ({ label, value, options, onChange, name, disabled = false, error = false, openDropdown, setOpenDropdown }: any) => {
+  const activeLabel = options.find((opt: any) => opt.val === value)?.label || "PILIH OPSI...";
+  const isDropdownOpen = openDropdown === name;
+
+  const baseBorder = error 
+    ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50' 
+    : (isDropdownOpen ? 'bg-gray-50 border-emerald-500 ring-2 ring-emerald-500/10' : 'bg-gray-50 border-gray-200');
+
+  return (
+    <div className={`space-y-1.5 flex flex-col relative ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}>
+      <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider ml-1">{label}</label>
+      <div 
+        onClick={() => !disabled && setOpenDropdown(isDropdownOpen ? null : name)}
+        className={`w-full px-4 py-3.5 border ${baseBorder} rounded-xl flex items-center justify-between transition-all ${disabled ? 'bg-gray-100' : 'cursor-pointer hover:border-emerald-500/50'}`}
+      >
+        <span className={`text-xs font-bold uppercase ${!value ? 'text-gray-400' : (error ? 'text-red-700' : 'text-gray-700')}`}>{activeLabel}</span>
+        {!disabled && <ChevronDown size={16} className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />}
+      </div>
+      {isDropdownOpen && !disabled && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpenDropdown(null)} />
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1 z-40 animate-in fade-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto">
+            {options.map((opt: any) => (
+              <div 
+                key={opt.val}
+                onClick={() => { onChange(opt.val); setOpenDropdown(null); }}
+                className={`w-full text-left px-4 py-3 text-xs font-bold cursor-pointer transition-colors ${value === opt.val ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-gray-50 text-gray-700'}`}
+              >
+                {opt.label}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default function DaftarQurbanPublic() {
   const [step, setStep] = useState(0); 
@@ -26,7 +61,7 @@ export default function DaftarQurbanPublic() {
   // 🐄 STATE 2 & 3: HEWAN & OPERASIONAL
   const [animals, setAnimals] = useState([
     { 
-      id: Date.now(), 
+      id: 1, 
       jenis: "", bentuk: "", nominal: 0,
       pindah_sapi: false, 
       nama_shohibul_sapi: ["", "", "", "", "", "", ""], 
@@ -71,7 +106,7 @@ export default function DaftarQurbanPublic() {
   const updateAnimal = (id: number, field: string, value: any) => {
     setAnimals(animals.map(a => {
       if (a.id === id) {
-        let updated = { ...a, [field]: value };
+        const updated = { ...a, [field]: value };
         if (field === "jenis" && value === "3") updated.bentuk = "UANG"; 
         if (field === "jenis" || field === "bentuk") updated.nominal = calculatePrice(updated.jenis, updated.bentuk);
         return updated;
@@ -184,45 +219,6 @@ export default function DaftarQurbanPublic() {
   };
 
   const goToStep = (targetStep: number) => setStep(targetStep);
-
-  const CustomSelect = ({ label, value, options, onChange, name, disabled = false, error = false }: any) => {
-    const activeLabel = options.find((opt: any) => opt.val === value)?.label || "PILIH OPSI...";
-    const isDropdownOpen = openDropdown === name;
-
-    const baseBorder = error 
-      ? 'border-red-500 ring-2 ring-red-500/20 bg-red-50' 
-      : (isDropdownOpen ? 'bg-gray-50 border-emerald-500 ring-2 ring-emerald-500/10' : 'bg-gray-50 border-gray-200');
-
-    return (
-      <div className={`space-y-1.5 flex flex-col relative ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}>
-        <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider ml-1">{label}</label>
-        <div 
-          onClick={() => !disabled && setOpenDropdown(isDropdownOpen ? null : name)}
-          className={`w-full px-4 py-3.5 border ${baseBorder} rounded-xl flex items-center justify-between transition-all ${disabled ? 'bg-gray-100' : 'cursor-pointer hover:border-emerald-500/50'}`}
-        >
-          <span className={`text-xs font-bold uppercase ${!value ? 'text-gray-400' : (error ? 'text-red-700' : 'text-gray-700')}`}>{activeLabel}</span>
-          {!disabled && <ChevronDown size={16} className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />}
-        </div>
-        {isDropdownOpen && !disabled && (
-          <>
-            <div className="fixed inset-0 z-30" onClick={() => setOpenDropdown(null)} />
-            {/* ✨ Tambahin max-h-60 overflow-y-auto biar dropdown wilayah bisa discroll */}
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1 z-40 animate-in fade-in slide-in-from-top-2 duration-200 max-h-60 overflow-y-auto">
-              {options.map((opt: any) => (
-                <div 
-                  key={opt.val}
-                  onClick={() => { onChange(opt.val); setOpenDropdown(null); }}
-                  className={`w-full text-left px-4 py-3 text-xs font-bold cursor-pointer transition-colors ${value === opt.val ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-gray-50 text-gray-700'}`}
-                >
-                  {opt.label}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
 
   const renderStepIndicator = (num: number, title: string, icon: any) => {
     const isActive = step === num;
@@ -366,6 +362,8 @@ export default function DaftarQurbanPublic() {
                     onChange={(val:any) => setPersonalData({...personalData, asal_wilayah: val})} 
                     options={wilayahCodes.map(kode => ({ val: kode, label: formatWilayah(kode).toUpperCase() }))} 
                     error={showErrors && !personalData.asal_wilayah}
+                    openDropdown={openDropdown}
+                    setOpenDropdown={setOpenDropdown}
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -401,6 +399,8 @@ export default function DaftarQurbanPublic() {
                         onChange={(val:any)=>updateAnimal(ani.id, 'jenis', val)} 
                         options={[{val:"1", label:"🐐 KAMBING"}, {val:"3", label:"🤝 SAPI PATUNGAN"}, {val:"2", label:"🐄 SAPI UTUH"}]} 
                         error={showErrors && !ani.jenis}
+                        openDropdown={openDropdown}
+                        setOpenDropdown={setOpenDropdown}
                       />
                       <CustomSelect 
                         label="Bentuk Titipan" name={`bentuk_${ani.id}`} value={ani.bentuk} 
@@ -408,6 +408,8 @@ export default function DaftarQurbanPublic() {
                         disabled={ani.jenis === "3"} 
                         options={[{val:"UANG", label:"💵 TITIP UANG"}, {val:"HEWAN", label:"🥩 BAWA HEWAN"}]} 
                         error={showErrors && !ani.bentuk}
+                        openDropdown={openDropdown}
+                        setOpenDropdown={setOpenDropdown}
                       />
                     </div>
 
@@ -462,8 +464,8 @@ export default function DaftarQurbanPublic() {
                     <h4 className="text-xs font-black text-emerald-700 uppercase tracking-widest mb-4 border-b border-gray-100 pb-2">Hewan Ke-{index+1} ({ani.jenis === '1' ? 'Kambing' : ani.jenis === '3' ? 'Sapi Patungan' : 'Sapi Utuh'})</h4>
                     
                     <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4">
-                      <CustomSelect label="Hadir Melihat?" name={`melihat_${ani.id}`} value={ani.melihat} onChange={(val:any)=>updateAnimal(ani.id, 'melihat', val)} options={[{val:"YA", label:"YA 👀"}, {val:"TIDAK", label:"TIDAK ❌"}]} error={showErrors && !ani.melihat} />
-                      <CustomSelect label="Ikut Menyembelih?" name={`menyembelih_${ani.id}`} value={ani.menyembelih} onChange={(val:any)=>updateAnimal(ani.id, 'menyembelih', val)} options={[{val:"YA", label:"YA 🔪"}, {val:"TIDAK", label:"TIDAK ❌"}]} error={showErrors && !ani.menyembelih} />
+                      <CustomSelect label="Hadir Melihat?" name={`melihat_${ani.id}`} value={ani.melihat} onChange={(val:any)=>updateAnimal(ani.id, 'melihat', val)} options={[{val:"YA", label:"YA 👀"}, {val:"TIDAK", label:"TIDAK ❌"}]} error={showErrors && !ani.melihat} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} />
+                      <CustomSelect label="Ikut Menyembelih?" name={`menyembelih_${ani.id}`} value={ani.menyembelih} onChange={(val:any)=>updateAnimal(ani.id, 'menyembelih', val)} options={[{val:"YA", label:"YA 🔪"}, {val:"TIDAK", label:"TIDAK ❌"}]} error={showErrors && !ani.menyembelih} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} />
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 mb-5">
@@ -473,6 +475,8 @@ export default function DaftarQurbanPublic() {
                         onChange={(val:any)=>updateAnimal(ani.id, 'penyaluran', val)} 
                         options={[{val:"LUAR", label:"YA, BERSEDIA"}, {val:"DALAM", label:"TIDAK (HARUS DI MMI)"}]} 
                         error={showErrors && !ani.penyaluran}
+                        openDropdown={openDropdown}
+                        setOpenDropdown={setOpenDropdown}
                       />
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-black text-gray-400 uppercase tracking-wider ml-1">Jml Bagian (Bungkus)</label>
@@ -487,6 +491,8 @@ export default function DaftarQurbanPublic() {
                             onChange={(val:any)=>updateAnimal(ani.id, 'opsi_pesan', val)} 
                             options={[{val:"PASRAH", label:"DISERAHKAN SELURUHNYA KE PANITIA"}, {val:"KHUSUS", label:"ADA PERMINTAAN KHUSUS"}]} 
                             error={showErrors && !ani.opsi_pesan}
+                            openDropdown={openDropdown}
+                            setOpenDropdown={setOpenDropdown}
                         />
                         
                         {ani.opsi_pesan === "KHUSUS" && (
@@ -500,6 +506,8 @@ export default function DaftarQurbanPublic() {
                                     onChange={(val:any)=>updateAnimal(ani.id, 'pengambilan_pesan', val)} 
                                     options={[{val:"AMBIL", label:"AMBIL SENDIRI KE MMI"}, {val:"DIANTAR", label:"DIANTAR KE ALAMAT"}]} 
                                     error={showErrors && !ani.pengambilan_pesan}
+                                    openDropdown={openDropdown}
+                                    setOpenDropdown={setOpenDropdown}
                                 />
                             </div>
                         )}

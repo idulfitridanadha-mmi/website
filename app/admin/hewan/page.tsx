@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { getHewanQurban } from "@/app/actions/hewan";
-import { Plus, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import SearchBar from "@/components/admin/SearchBar";
 import HewanActionButtons from "@/components/admin/HewanActionButtons";
 import FormHewanDrawer from "@/components/admin/FormHewanDrawer";
@@ -90,7 +90,7 @@ async function HewanTableList({ query, year }: { query: string; year: string }) 
                           let names: string[] = [];
                           try {
                             names = JSON.parse(item.nama_shohibul_sapi || "[]");
-                          } catch(e) {}
+                          } catch {}
                           const firstName = names.length > 0 ? names[0] : (item.pengqurban?.nama_lengkap || "Tanpa Nama");
                           return (
                             <>

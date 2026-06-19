@@ -19,16 +19,24 @@ export default function InputanOnlinePage() {
 
   const [viewData, setViewData] = useState<any>(null);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
   const loadData = async () => {
-    setIsLoading(true);
     const res = await getPermohonanOnline();
     if (res.success) setData(res.data);
     setIsLoading(false);
   };
+
+  useEffect(() => {
+    let ignore = false;
+    getPermohonanOnline().then((res) => {
+      if (!ignore) {
+        if (res.success) setData(res.data);
+        setIsLoading(false);
+      }
+    });
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   // 1. Fungsi buat BUKA Modal
   const confirmAction = (id: string, action: "ACC" | "DITOLAK") => {
@@ -48,6 +56,7 @@ export default function InputanOnlinePage() {
     
     if (res.success) {
       toast.success(res.message, { id: toastId });
+      setIsLoading(true);
       loadData(); // Refresh tabel otomatis
     } else {
       toast.error(res.message, { id: toastId });

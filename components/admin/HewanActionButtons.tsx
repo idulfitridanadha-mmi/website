@@ -1,9 +1,43 @@
 "use client";
 
 import { useState } from "react";
-import { Trash2, Edit, AlertTriangle, Loader2, X, Save, Eye, Printer, CheckCircle2, User, ChevronDown, Info } from "lucide-react";
+import { Trash2, Edit, AlertTriangle, Loader2, X, Save, Eye, Printer, ChevronDown, Info } from "lucide-react";
 import { deleteHewan, updateHewan } from "@/app/actions/hewan";
 import toast from "react-hot-toast";
+
+const CustomSelect = ({ label, value, options, name, openDropdown, setOpenDropdown, onSelect }: any) => {
+  const activeLabel = options.find((opt: any) => opt.val === value)?.label || value;
+  const isDropdownOpen = openDropdown === name;
+
+  return (
+    <div className="space-y-1.5 flex flex-col relative">
+      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+      <div 
+        onClick={() => setOpenDropdown(isDropdownOpen ? null : name)}
+        className={`w-full px-4 py-3 bg-gray-50 border ${isDropdownOpen ? 'border-emerald-500 ring-2 ring-emerald-500/10' : 'border-gray-200'} rounded-xl flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition-all`}
+      >
+        <span className="text-sm font-bold text-gray-700 uppercase">{activeLabel}</span>
+        <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+      </div>
+      {isDropdownOpen && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpenDropdown(null)} />
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
+            {options.map((opt: any) => (
+              <div 
+                key={opt.val}
+                onClick={() => { onSelect(opt.val); setOpenDropdown(null); }}
+                className={`w-full text-left px-4 py-2.5 text-sm font-bold cursor-pointer transition-colors ${value === opt.val ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-gray-50 text-gray-700'}`}
+              >
+                {opt.label}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 export default function HewanActionButtons({ data }: { data: any }) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -44,12 +78,12 @@ export default function HewanActionButtons({ data }: { data: any }) {
     setSelectedMember(item);
     
     // Parse JSON 7 Nama kalau ada
-    let parsedNames = ["", "", "", "", "", "", ""];
+    const parsedNames = ["", "", "", "", "", "", ""];
     if (item.nama_shohibul_sapi) {
       try {
         const dbNames = JSON.parse(item.nama_shohibul_sapi);
         dbNames.forEach((n: string, i: number) => { if (i < 7) parsedNames[i] = n; });
-      } catch (e) {}
+      } catch {}
     }
     setNamaSapiUtuh(parsedNames);
 
@@ -147,7 +181,7 @@ export default function HewanActionButtons({ data }: { data: any }) {
       if (!res.ok) throw new Error('Gagal memproses PDF');
       const blob = await res.blob();
       setPdfUrl(URL.createObjectURL(blob));
-    } catch (error) {
+    } catch {
       toast.error("Waduh, gagal nampilin preview PDF!");
       setIsPreviewOpen(false);
     } finally {
@@ -161,40 +195,6 @@ export default function HewanActionButtons({ data }: { data: any }) {
   };
 
   const membersList = data.isGroup ? data.members : [data];
-
-  const CustomSelect = ({ label, value, options, name }: any) => {
-    const activeLabel = options.find((opt: any) => opt.val === value)?.label || value;
-    const isDropdownOpen = openDropdown === name;
-
-    return (
-      <div className="space-y-1.5 flex flex-col relative">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
-        <div 
-          onClick={() => setOpenDropdown(isDropdownOpen ? null : name)}
-          className={`w-full px-4 py-3 bg-gray-50 border ${isDropdownOpen ? 'border-emerald-500 ring-2 ring-emerald-500/10' : 'border-gray-200'} rounded-xl flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition-all`}
-        >
-          <span className="text-sm font-bold text-gray-700 uppercase">{activeLabel}</span>
-          <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
-        </div>
-        {isDropdownOpen && (
-          <>
-            <div className="fixed inset-0 z-30" onClick={() => setOpenDropdown(null)} />
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
-              {options.map((opt: any) => (
-                <div 
-                  key={opt.val}
-                  onClick={() => { setHwn({...hwn, [name]: opt.val}); setOpenDropdown(null); }}
-                  className={`w-full text-left px-4 py-2.5 text-sm font-bold cursor-pointer transition-colors ${value === opt.val ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-gray-50 text-gray-700'}`}
-                >
-                  {opt.label}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -395,7 +395,7 @@ export default function HewanActionButtons({ data }: { data: any }) {
                   <div className="w-1.5 h-4 bg-mmi rounded-full"></div> Informasi Nominal
                 </h4>
                 <div className="grid grid-cols-2 gap-5">
-                  <CustomSelect label="Bentuk Titipan" name="bentuk" value={hwn.bentuk} options={[{val:"UANG", label:"UANG 💵"}, {val:"HEWAN", label:"HEWAN HIDUP 🥩"}]} />
+                  <CustomSelect label="Bentuk Titipan" name="bentuk" value={hwn.bentuk} options={[{val:"UANG", label:"UANG 💵"}, {val:"HEWAN", label:"HEWAN HIDUP 🥩"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => setHwn({ ...hwn, bentuk: val })} />
                   <div className="space-y-1.5 flex flex-col">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nominal Uang (Rp)</label>
                     <input type="number" name="uang" value={hwn.uang} onChange={handleChange} placeholder="0" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold focus:border-emerald-500 outline-none transition-all" />
@@ -409,8 +409,8 @@ export default function HewanActionButtons({ data }: { data: any }) {
                   <div className="w-1.5 h-4 bg-mmi rounded-full"></div> Pembayaran & Administrasi
                 </h4>
                 <div className="grid grid-cols-2 gap-5">
-                  <CustomSelect label="Metode Bayar" name="metode_bayar" value={hwn.metode_bayar} options={[{val:"TUNAI", label:"TUNAI 💵"}, {val:"TRANSFER", label:"TRANSFER 💳"}]} />
-                  <CustomSelect label="Status Bayar" name="status_bayar" value={hwn.status_bayar} options={[{val:"LUNAS", label:"LUNAS ✅"}, {val:"DP", label:"DP 💰"}, {val:"BELUM LUNAS", label:"BELUM LUNAS ❌"}]} />
+                  <CustomSelect label="Metode Bayar" name="metode_bayar" value={hwn.metode_bayar} options={[{val:"TUNAI", label:"TUNAI 💵"}, {val:"TRANSFER", label:"TRANSFER 💳"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => setHwn({ ...hwn, metode_bayar: val })} />
+                  <CustomSelect label="Status Bayar" name="status_bayar" value={hwn.status_bayar} options={[{val:"LUNAS", label:"LUNAS ✅"}, {val:"DP", label:"DP 💰"}, {val:"BELUM LUNAS", label:"BELUM LUNAS ❌"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => setHwn({ ...hwn, status_bayar: val })} />
                   <div className="col-span-2">
                     <CustomSelect 
                       label="Status Pemrosesan Hewan" 
@@ -421,6 +421,9 @@ export default function HewanActionButtons({ data }: { data: any }) {
                         {val:"DISEMBELIH", label:"SLAUGHTERED / DISEMBELIH 🔪"}, 
                         {val:"DIDISTRIBUSIKAN", label:"DISTRIBUTED / DIDISTRIBUSIKAN 📦"}
                       ]} 
+                      openDropdown={openDropdown}
+                      setOpenDropdown={setOpenDropdown}
+                      onSelect={(val: any) => setHwn({ ...hwn, status_hewan: val })}
                     />
                   </div>
                 </div>
@@ -432,9 +435,9 @@ export default function HewanActionButtons({ data }: { data: any }) {
                   <div className="w-1.5 h-4 bg-mmi rounded-full"></div> Teknis Lapangan & Distribusi
                 </h4>
                 <div className="grid grid-cols-2 gap-5 mb-2">
-                  <CustomSelect label="Hadir Melihat?" name="melihat" value={hwn.melihat} options={[{val:"YA", label:"YA 👀"}, {val:"TIDAK", label:"TIDAK ❌"}]} />
-                  <CustomSelect label="Ikut Menyembelih?" name="menyembelih" value={hwn.menyembelih} options={[{val:"YA", label:"YA 🔪"}, {val:"TIDAK", label:"TIDAK ❌"}]} />
-                  <CustomSelect label="Sembelih di Luar MMI?" name="penyaluran" value={hwn.penyaluran} options={[{val:"LUAR", label:"YA, BERSEDIA 🌍"}, {val:"DALAM", label:"TIDAK (HARUS DI MMI) 🏢"}]} />
+                  <CustomSelect label="Hadir Melihat?" name="melihat" value={hwn.melihat} options={[{val:"YA", label:"YA 👀"}, {val:"TIDAK", label:"TIDAK ❌"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => setHwn({ ...hwn, melihat: val })} />
+                  <CustomSelect label="Ikut Menyembelih?" name="menyembelih" value={hwn.menyembelih} options={[{val:"YA", label:"YA 🔪"}, {val:"TIDAK", label:"TIDAK ❌"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => setHwn({ ...hwn, menyembelih: val })} />
+                  <CustomSelect label="Sembelih di Luar MMI?" name="penyaluran" value={hwn.penyaluran} options={[{val:"LUAR", label:"YA, BERSEDIA 🌍"}, {val:"DALAM", label:"TIDAK (HARUS DI MMI) 🏢"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => setHwn({ ...hwn, penyaluran: val })} />
                   <div className="space-y-1.5 flex flex-col">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Jml Bagian (Bungkus)</label>
                     <input type="number" name="jml_bagian" value={hwn.jml_bagian} onChange={handleChange} placeholder="1" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none focus:border-emerald-500 transition-all" />
@@ -445,6 +448,9 @@ export default function HewanActionButtons({ data }: { data: any }) {
                     <CustomSelect 
                         label="Permintaan Bagian Daging" name="opsi_pesan" value={hwn.opsi_pesan} 
                         options={[{val:"PASRAH", label:"DISERAHKAN KE PANITIA"}, {val:"KHUSUS", label:"ADA PERMINTAAN KHUSUS"}]} 
+                        openDropdown={openDropdown}
+                        setOpenDropdown={setOpenDropdown}
+                        onSelect={(val: any) => setHwn({ ...hwn, opsi_pesan: val })}
                     />
                     
                     {hwn.opsi_pesan === "KHUSUS" && (

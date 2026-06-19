@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, Calendar, CheckCircle2, Award, Truck } from "lucide-react";
+import { Search, Loader2, Calendar, Award, Truck } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { getStepperColorClass, getPaymentBadgeColorClass } from "@/app/utils/tracking";
 
 export default function PublicTrackingPage() {
   const [query, setQuery] = useState("");
@@ -28,21 +29,11 @@ export default function PublicTrackingPage() {
       } else {
         setError(resData.message || "Data pelacakan qurban tidak ditemukan.");
       }
-    } catch (err) {
+    } catch {
       setError("Gagal menghubungi server. Silakan coba beberapa saat lagi.");
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStepStatus = (currentStatus: string, step: string) => {
-    const order = ["MENUNGGU", "DISEMBELIH", "DIDISTRIBUSIKAN"];
-    const currentIndex = order.indexOf(currentStatus.toUpperCase());
-    const stepIndex = order.indexOf(step.toUpperCase());
-
-    if (currentIndex >= stepIndex) return "completed";
-    if (currentIndex + 1 === stepIndex) return "active";
-    return "upcoming";
   };
 
   const getFormatJenisQurban = (code: string) => {
@@ -80,7 +71,7 @@ export default function PublicTrackingPage() {
         {/* Banner header logo */}
         <div className="text-center mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
           <div className="flex justify-center mb-4">
-            <Image src="/logo-mmi-hijau.png" alt="Logo MMI" width={64} height={64} className="drop-shadow-md" onError={(e) => {
+            <Image src="/logo-mmi.png" alt="Logo MMI" width={64} height={64} className="drop-shadow-md" onError={(e) => {
               // Fallback jika logo hijau tidak ada
               (e.target as HTMLElement).style.display = "none";
             }} />
@@ -155,11 +146,7 @@ export default function PublicTrackingPage() {
                       {getFormatJenisQurban(hewan.jenis_qurban)}
                     </span>
                     <span className={`text-[9px] font-black px-3 py-2 rounded-xl uppercase tracking-wider ${
-                      hewan.status_bayar === "LUNAS"
-                        ? "bg-emerald-100 text-[#115E38] border border-emerald-200"
-                        : hewan.status_bayar === "DP"
-                        ? "bg-amber-100 text-amber-800 border border-amber-200"
-                        : "bg-red-100 text-red-800 border border-red-200"
+                      getPaymentBadgeColorClass(hewan.status_bayar)
                     }`}>
                       Pembayaran: {hewan.status_bayar}
                     </span>
@@ -175,9 +162,7 @@ export default function PublicTrackingPage() {
                     {/* Tahap 1: Menunggu */}
                     <div className="flex items-center md:flex-col md:text-center p-4 bg-[#F8FAF9] rounded-2xl border border-gray-100 gap-4 md:gap-3 transition-all">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all font-black ${
-                        getStepStatus(hewan.status_hewan, "MENUNGGU") === "completed"
-                          ? "bg-[#115E38] text-white shadow-md shadow-emerald-900/10"
-                          : "bg-amber-500 text-white animate-pulse"
+                        getStepperColorClass(hewan.status_hewan, "MENUNGGU")
                       }`}>
                         <Calendar className="w-5 h-5" />
                       </div>
@@ -190,28 +175,20 @@ export default function PublicTrackingPage() {
                     {/* Tahap 2: Disembelih */}
                     <div className="flex items-center md:flex-col md:text-center p-4 bg-[#F8FAF9] rounded-2xl border border-gray-100 gap-4 md:gap-3 transition-all">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all font-black ${
-                        getStepStatus(hewan.status_hewan, "DISEMBELIH") === "completed"
-                          ? "bg-[#115E38] text-white shadow-md shadow-emerald-900/10"
-                          : getStepStatus(hewan.status_hewan, "DISEMBELIH") === "active"
-                          ? "bg-amber-500 text-white animate-pulse"
-                          : "bg-gray-200 text-gray-400"
+                        getStepperColorClass(hewan.status_hewan, "DISEMBELIH")
                       }`}>
                         <Award className="w-5 h-5" />
                       </div>
                       <div className="flex flex-col md:items-center">
                         <h4 className="font-extrabold text-gray-800 text-xs uppercase tracking-wide">Penyembelihan</h4>
-                        <p className="text-[10px] text-gray-400 font-bold mt-0.5 leading-normal">Penyembelihan syar'i oleh jagal resmi MMI di area jagal.</p>
+                        <p className="text-[10px] text-gray-400 font-bold mt-0.5 leading-normal">Penyembelihan syar&apos;i oleh jagal resmi MMI di area jagal.</p>
                       </div>
                     </div>
 
                     {/* Tahap 3: Didistribusikan */}
                     <div className="flex items-center md:flex-col md:text-center p-4 bg-[#F8FAF9] rounded-2xl border border-gray-100 gap-4 md:gap-3 transition-all">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-all font-black ${
-                        getStepStatus(hewan.status_hewan, "DIDISTRIBUSIKAN") === "completed"
-                          ? "bg-[#115E38] text-white shadow-md shadow-emerald-900/10"
-                          : getStepStatus(hewan.status_hewan, "DIDISTRIBUSIKAN") === "active"
-                          ? "bg-amber-500 text-white animate-pulse"
-                          : "bg-gray-200 text-gray-400"
+                        getStepperColorClass(hewan.status_hewan, "DIDISTRIBUSIKAN")
                       }`}>
                         <Truck className="w-5 h-5" />
                       </div>

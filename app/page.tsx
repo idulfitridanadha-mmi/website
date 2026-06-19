@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Calendar, CheckCircle2, ClipboardList, HandHeart, Users } from "lucide-react";
 
@@ -45,13 +44,21 @@ export default function Home() {
             <p className="mt-4 text-lg sm:text-xl text-emerald-100 max-w-2xl mx-auto mb-10">
               Layanan pendaftaran dan manajemen hewan qurban yang transparan, mudah, dan amanah.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center" data-aos="fade-up" data-aos-delay="200">
+            <div className="flex flex-col items-center gap-4 justify-center" data-aos="fade-up" data-aos-delay="200">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center w-full">
+                <Link
+                  href="/daftar-qurban"
+                  className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-emerald-950 bg-amber-400 hover:bg-amber-500 rounded-full transition-all hover:scale-105"
+                >
+                  Daftar Qurban Sekarang
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Link>
+              </div>
               <Link
-                href="/daftar-qurban"
-                className="inline-flex items-center justify-center px-8 py-4 text-base font-semibold text-emerald-950 bg-amber-400 hover:bg-amber-500 rounded-full transition-all hover:scale-105"
+                href="/tracking"
+                className="text-emerald-200 hover:text-amber-400 font-medium text-sm transition-colors mt-2"
               >
-                Daftar Qurban Sekarang
-                <ArrowRight className="ml-2 w-5 h-5" />
+                Sudah mendaftar qurban? Lacak hewan Anda di sini →
               </Link>
             </div>
           </div>

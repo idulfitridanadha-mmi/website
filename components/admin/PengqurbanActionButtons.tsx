@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Trash2, Edit, AlertTriangle, Loader2, X, Save, User, Phone, MapPin, Hash, Map, BadgeCheck, Search, Users, ChevronDown } from "lucide-react";
+import { Trash2, Edit, AlertTriangle, Loader2, X, Save, User, Phone, MapPin, Hash, Map, BadgeCheck, Search, Users, ChevronDown, Eye } from "lucide-react";
 import { deletePengqurban, updatePengqurban } from "@/app/actions/pengqurban";
 import { getPetugasJaga } from "@/app/actions/petugas";
 import toast from "react-hot-toast";
@@ -19,6 +19,7 @@ export default function PengqurbanActionButtons({ data }: { data: any }) {
   // ==========================================
   // 📦 STATE MANAGEMENT (KHUSUS EDIT & DELETE ORANG SAJA)
   // ==========================================
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -101,6 +102,11 @@ export default function PengqurbanActionButtons({ data }: { data: any }) {
   return (
     <>
       <div className="flex items-center gap-2">
+        {/* ✨ TOMBOL LIHAT DETAIL (VIEW) */}
+        <button onClick={() => setIsDetailOpen(true)} className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors" title="Lihat Detail Rinci">
+          <Eye size={18} />
+        </button>
+
         {/* ✨ INI DIA MAGIC-NYA! Panggil Super Form dengan prop defaultNkw */}
         <FormHewanDrawer defaultNkw={nkwLama} />
         
@@ -281,6 +287,106 @@ export default function PengqurbanActionButtons({ data }: { data: any }) {
           <button onClick={executeUpdate} disabled={isSubmitting} className={`px-8 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md text-white ${isSubmitting ? "bg-gray-400 cursor-not-allowed shadow-none" : "bg-blue-600 hover:bg-blue-700 shadow-blue-500/20"}`}>
             {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Menyimpan...</> : <><Save size={18} /> Update Data</>}
           </button>
+        </div>
+      </div>
+
+      {/* 🔵 DRAWER LIHAT DETAIL (VIEW) */}
+      {isDetailOpen && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-[60] animate-in fade-in" onClick={() => setIsDetailOpen(false)} />
+      )}
+
+      <div 
+        className={`fixed top-0 right-0 h-full w-full max-w-lg bg-gray-50 shadow-2xl z-[70] transform transition-transform duration-300 ease-in-out flex flex-col ${
+          isDetailOpen ? "translate-x-0" : "translate-x-full hidden"
+        }`}
+      >
+        <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-center bg-white sticky top-0 z-10">
+          <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Eye size={20} className="text-emerald-600"/> Informasi Rinci
+          </h3>
+          <button onClick={() => setIsDetailOpen(false)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full bg-gray-100 transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          {/* Blok Identitas Utama */}
+          <div className="bg-emerald-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+            <h4 className="font-bold text-emerald-100 text-sm uppercase tracking-widest mb-4">Profil Pengqurban</h4>
+            <div className="grid grid-cols-2 gap-y-4 relative z-10">
+              <div>
+                <p className="text-emerald-200 text-xs">Nomor Kwitansi (NKW)</p>
+                <p className="font-bold text-lg">#{data.nkw}</p>
+              </div>
+              <div>
+                <p className="text-emerald-200 text-xs">Jenis Kelamin</p>
+                <p className="font-bold text-lg">{data.jenis_kelamin === "L" ? "Laki-laki ♂" : data.jenis_kelamin === "P" ? "Perempuan ♀" : "-"}</p>
+              </div>
+              <div>
+                <p className="text-emerald-200 text-xs">Asal Wilayah</p>
+                <p className="font-bold text-md uppercase">{data.kd_wilayah ? formatWilayah(data.kd_wilayah) : "-"}</p>
+              </div>
+              <div>
+                <p className="text-emerald-200 text-xs">Nomor Urut</p>
+                <p className="font-bold text-md">{data.no_urut || "-"}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Rincian Kontak & Alamat */}
+          <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm space-y-4">
+            <h5 className="font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
+              <User size={18} className="text-emerald-600"/> Detail Shohibul
+            </h5>
+            <div className="grid grid-cols-1 gap-y-3 text-sm">
+              <div>
+                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nama Lengkap</span>
+                <span className="font-black text-gray-800 uppercase">{data.nama_lengkap}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Nomor HP / WhatsApp</span>
+                <span className="font-bold text-gray-800">{data.telepon || "-"}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest">Alamat Lengkap</span>
+                <span className="font-bold text-gray-800 uppercase leading-relaxed">{data.alamat || "-"}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Rincian Hewan Qurban yang Didaftarkan */}
+          <div className="bg-white border border-gray-200 p-5 rounded-2xl shadow-sm space-y-4">
+            <h5 className="font-bold text-gray-800 border-b border-gray-100 pb-2 flex items-center gap-2">
+              <span className="text-emerald-600 font-bold">🐐</span> Hewan Qurban Terdaftar ({data.hewan_qurban?.length || 0})
+            </h5>
+            {data.hewan_qurban && data.hewan_qurban.length > 0 ? (
+              <div className="space-y-3">
+                {data.hewan_qurban.map((item: any, idx: number) => (
+                  <div key={item.id_hewan} className="bg-gray-50 border border-gray-150 rounded-xl p-3 text-xs space-y-1">
+                    <div className="flex justify-between items-center font-bold text-gray-800">
+                      <span>
+                        {idx + 1}. {item.jenis_qurban === "1" || item.jenis_qurban?.toLowerCase() === "kambing" ? "🐐 Kambing" : item.jenis_qurban === "2" || item.jenis_qurban?.toLowerCase() === "sapi" ? "🐄 Sapi" : "🐄 Sapi (Patungan)"}
+                      </span>
+                      <span className="font-mono text-gray-500">{item.no_id_lama || "-"}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-y-2 mt-2 text-[11px] text-gray-600">
+                      <div>
+                        <span className="font-medium">Bentuk:</span> <span className="font-bold text-gray-700">{item.bentuk}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">Penyaluran:</span> <span className="font-bold text-gray-700">{item.penyaluran || "INTERNAL"}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="font-medium">Status Pemrosesan:</span> <span className="font-bold text-emerald-600 uppercase bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">{item.status_hewan || "MENUNGGU"}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500 text-center font-medium py-2">Belum mendaftarkan hewan qurban.</p>
+            )}
+          </div>
         </div>
       </div>
     </>

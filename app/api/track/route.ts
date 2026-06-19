@@ -15,7 +15,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const searchQuery = query.trim();
+    let searchQuery = query.trim();
+
+    // Jika kueri mengandung angka (seperti nomor telepon/NKW/ID Hewan), bersihkan karakter selain angka
+    if (/\d/.test(searchQuery)) {
+      searchQuery = searchQuery.replace(/\D/g, "");
+    }
 
     // Mencari data hewan qurban berdasarkan ID Hewan, NKW, Nomor HP, atau Nama Lengkap
     const results = await prisma.hewanQurban.findMany({

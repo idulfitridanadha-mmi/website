@@ -1,7 +1,6 @@
 "use client";
 
-import { X, User, Heart, Wallet, FileText, Image as ImageIcon } from "lucide-react";
-import Image from "next/image";
+import { X, User, Heart, Wallet, Image as ImageIcon } from "lucide-react";
 
 export default function ViewPermohonanDrawer({ isOpen, onClose, data }: { isOpen: boolean, onClose: () => void, data: any }) {
   if (!isOpen || !data) return null;

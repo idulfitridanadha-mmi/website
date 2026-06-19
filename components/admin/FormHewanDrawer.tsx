@@ -5,6 +5,40 @@ import { Plus, X, Save, Loader2, ChevronDown, Upload, Info, CheckSquare } from "
 import { createHewan, getStatistikSapiPatungan } from "@/app/actions/hewan";
 import toast from "react-hot-toast";
 
+const CustomSelect = ({ label, value, options, name, openDropdown, setOpenDropdown, onSelect }: any) => {
+  const activeLabel = options.find((opt: any) => opt.val === value)?.label || value;
+  const isDropdownOpen = openDropdown === name;
+
+  return (
+    <div className="space-y-1.5 flex flex-col relative">
+      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
+      <div 
+        onClick={() => setOpenDropdown(isDropdownOpen ? null : name)}
+        className={`w-full px-4 py-3 bg-gray-50 border ${isDropdownOpen ? 'border-emerald-500 ring-2 ring-emerald-500/10' : 'border-gray-200'} rounded-xl flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition-all`}
+      >
+        <span className="text-sm font-bold text-gray-700 uppercase">{activeLabel}</span>
+        <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
+      </div>
+      {isDropdownOpen && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpenDropdown(null)} />
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
+            {options.map((opt: any) => (
+              <div 
+                key={opt.val}
+                onClick={() => { onSelect(opt.val); setOpenDropdown(null); }}
+                className={`w-full text-left px-4 py-2.5 text-sm font-bold cursor-pointer transition-colors ${value === opt.val ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-gray-50 text-gray-700'}`}
+              >
+                {opt.label}
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
 export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -12,7 +46,6 @@ export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string })
 
   const [groupStats, setGroupStats] = useState<Record<string, number>>({});
   const [suggestedGroup, setSuggestedGroup] = useState("1");
-  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   const [hwn, setHwn] = useState({
     nkw_pengqurban: defaultNkw || "",
@@ -29,33 +62,60 @@ export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string })
   const [namaSapiUtuh, setNamaSapiUtuh] = useState(["", "", "", "", "", "", ""]);
   const [fileBukti, setFileBukti] = useState<File | null>(null);
 
+  const handleOpen = () => {
+    setHwn({
+      nkw_pengqurban: defaultNkw || "",
+      jenis_qurban: "1", bentuk: "UANG", uang: "", kel_sapi: "",
+      metode_bayar: "TUNAI", status_bayar: "BELUM LUNAS", biaya_operasional: "",
+      melihat: "TIDAK", menyembelih: "TIDAK", penyaluran: "DALAM", jml_bagian: "", 
+      opsi_pesan: "PASRAH", pesan_bagian: "", pengambilan_pesan: "AMBIL",
+      no_uq: "", lokasi: "", keterangan: "", penerima: "", petugas: "", sebab: "", pindah_sapi: "TIDAK",
+    });
+    setNamaSapiUtuh(["", "", "", "", "", "", ""]);
+    setFileBukti(null);
+    setIsOpen(true);
+  };
+
   useEffect(() => {
     if (isOpen) {
-      setHwn(prev => ({ ...prev, nkw_pengqurban: defaultNkw || "" }));
-      setIsLoadingStats(true);
       getStatistikSapiPatungan().then(res => {
         if (res.success) {
           setGroupStats(res.data);
           setSuggestedGroup(res.suggested);
-          if (hwn.jenis_qurban === "3" && !hwn.kel_sapi) {
-            setHwn(prev => ({ ...prev, kel_sapi: res.suggested }));
-          }
+          
+          setHwn(prev => {
+            const updated = { ...prev };
+            if (prev.jenis_qurban === "3") {
+              updated.kel_sapi = res.suggested;
+            } else if (prev.jenis_qurban === "2") {
+              const maxGroup = Math.max(0, ...Object.keys(res.data).map(Number).filter(n => !isNaN(n)));
+              updated.kel_sapi = (maxGroup + 1).toString();
+            } else {
+              updated.kel_sapi = "";
+            }
+            return updated;
+          });
         }
-        setIsLoadingStats(false);
       });
     }
-  }, [isOpen, defaultNkw]);
+  }, [isOpen]);
 
-  useEffect(() => {
-    if (hwn.jenis_qurban === "3") {
-      setHwn(prev => ({ ...prev, kel_sapi: suggestedGroup }));
-    } else if (hwn.jenis_qurban === "2") {
-      const maxGroup = Math.max(0, ...Object.keys(groupStats).map(Number).filter(n => !isNaN(n)));
-      setHwn(prev => ({ ...prev, kel_sapi: (maxGroup + 1).toString() }));
-    } else {
-      setHwn(prev => ({ ...prev, kel_sapi: "" })); 
-    }
-  }, [hwn.jenis_qurban, suggestedGroup, groupStats]);
+  const handleSelect = (name: string, val: any) => {
+    setHwn(prev => {
+      const updated = { ...prev, [name]: val };
+      if (name === "jenis_qurban") {
+        if (val === "3") {
+          updated.kel_sapi = suggestedGroup;
+        } else if (val === "2") {
+          const maxGroup = Math.max(0, ...Object.keys(groupStats).map(Number).filter(n => !isNaN(n)));
+          updated.kel_sapi = (maxGroup + 1).toString();
+        } else {
+          updated.kel_sapi = "";
+        }
+      }
+      return updated;
+    });
+  };
 
   const handleChange = (e: any) => setHwn({ ...hwn, [e.target.name]: e.target.value.toUpperCase() });
   const handleNamaSapiChange = (index: number, value: string) => {
@@ -92,48 +152,14 @@ export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string })
       : <p className="text-[10px] text-emerald-600 font-bold mt-1 uppercase">✨ Kurang {missing} Orang Lagi</p>;
   };
 
-  const CustomSelect = ({ label, value, options, name }: any) => {
-    const activeLabel = options.find((opt: any) => opt.val === value)?.label || value;
-    const isDropdownOpen = openDropdown === name;
-
-    return (
-      <div className="space-y-1.5 flex flex-col relative">
-        <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</label>
-        <div 
-          onClick={() => setOpenDropdown(isDropdownOpen ? null : name)}
-          className={`w-full px-4 py-3 bg-gray-50 border ${isDropdownOpen ? 'border-emerald-500 ring-2 ring-emerald-500/10' : 'border-gray-200'} rounded-xl flex items-center justify-between cursor-pointer hover:border-emerald-500/50 transition-all`}
-        >
-          <span className="text-sm font-bold text-gray-700 uppercase">{activeLabel}</span>
-          <ChevronDown size={18} className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180 text-emerald-500' : ''}`} />
-        </div>
-        {isDropdownOpen && (
-          <>
-            <div className="fixed inset-0 z-30" onClick={() => setOpenDropdown(null)} />
-            <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1 z-40 animate-in fade-in slide-in-from-top-2 duration-200">
-              {options.map((opt: any) => (
-                <div 
-                  key={opt.val}
-                  onClick={() => { setHwn({...hwn, [name]: opt.val}); setOpenDropdown(null); }}
-                  className={`w-full text-left px-4 py-2.5 text-sm font-bold cursor-pointer transition-colors ${value === opt.val ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-gray-50 text-gray-700'}`}
-                >
-                  {opt.label}
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    );
-  };
-
   return (
     <>
       {!defaultNkw ? (
-        <button onClick={() => setIsOpen(true)} className="bg-mmi hover:bg-mmi-hover text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md shadow-mmi/20">
+        <button onClick={handleOpen} className="bg-mmi hover:bg-mmi-hover text-white px-5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-md shadow-mmi/20">
           <Plus size={18} /> Tambah Hewan
         </button>
       ) : (
-        <button onClick={() => setIsOpen(true)} className="p-2 text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 rounded-lg transition-colors">
+        <button onClick={handleOpen} className="p-2 text-emerald-600 bg-emerald-50 border border-emerald-100 hover:bg-emerald-100 rounded-lg transition-colors">
           <Plus size={18} />
         </button>
       )}
@@ -171,8 +197,8 @@ export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string })
                   <div className="w-1.5 h-4 bg-mmi rounded-full"></div> Informasi Hewan & Nominal
                 </h4>
                 <div className="grid grid-cols-2 gap-5">
-                  <CustomSelect label="Jenis Qurban" name="jenis_qurban" value={hwn.jenis_qurban} options={[{val:"1", label:"KAMBING 🐐"}, {val:"2", label:"SAPI UTUH 🐄"}, {val:"3", label:"SAPI PATUNGAN 🤝"}]} />
-                  <CustomSelect label="Bentuk Titipan" name="bentuk" value={hwn.bentuk} options={[{val:"UANG", label:"UANG 💵"}, {val:"HEWAN", label:"HEWAN HIDUP 🥩"}]} />
+                  <CustomSelect label="Jenis Qurban" name="jenis_qurban" value={hwn.jenis_qurban} options={[{val:"1", label:"KAMBING 🐐"}, {val:"2", label:"SAPI UTUH 🐄"}, {val:"3", label:"SAPI PATUNGAN 🤝"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => handleSelect("jenis_qurban", val)} />
+                  <CustomSelect label="Bentuk Titipan" name="bentuk" value={hwn.bentuk} options={[{val:"UANG", label:"UANG 💵"}, {val:"HEWAN", label:"HEWAN HIDUP 🥩"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => handleSelect("bentuk", val)} />
 
                   <div className="space-y-1.5 flex flex-col">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nominal Uang (Rp)</label>
@@ -221,8 +247,8 @@ export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string })
                   <div className="w-1.5 h-4 bg-mmi rounded-full"></div> Pembayaran & Administrasi
                 </h4>
                 <div className="grid grid-cols-2 gap-5">
-                  <CustomSelect label="Metode Bayar" name="metode_bayar" value={hwn.metode_bayar} options={[{val:"TUNAI", label:"TUNAI 💵"}, {val:"TRANSFER", label:"TRANSFER 💳"}]} />
-                  <CustomSelect label="Status Bayar" name="status_bayar" value={hwn.status_bayar} options={[{val:"LUNAS", label:"LUNAS ✅"}, {val:"DP", label:"DP 💰"}, {val:"BELUM LUNAS", label:"BELUM LUNAS ❌"}]} />
+                  <CustomSelect label="Metode Bayar" name="metode_bayar" value={hwn.metode_bayar} options={[{val:"TUNAI", label:"TUNAI 💵"}, {val:"TRANSFER", label:"TRANSFER 💳"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => handleSelect("metode_bayar", val)} />
+                  <CustomSelect label="Status Bayar" name="status_bayar" value={hwn.status_bayar} options={[{val:"LUNAS", label:"LUNAS ✅"}, {val:"DP", label:"DP 💰"}, {val:"BELUM LUNAS", label:"BELUM LUNAS ❌"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => handleSelect("status_bayar", val)} />
                   
                   <div className="col-span-2 space-y-1.5">
                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Bukti Transfer (Opsional)</label>
@@ -243,9 +269,9 @@ export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string })
                   <div className="w-1.5 h-4 bg-mmi rounded-full"></div> Teknis Lapangan & Distribusi
                 </h4>
                 <div className="grid grid-cols-2 gap-5 mb-2">
-                  <CustomSelect label="Hadir Melihat?" name="melihat" value={hwn.melihat} options={[{val:"YA", label:"YA 👀"}, {val:"TIDAK", label:"TIDAK ❌"}]} />
-                  <CustomSelect label="Ikut Menyembelih?" name="menyembelih" value={hwn.menyembelih} options={[{val:"YA", label:"YA 🔪"}, {val:"TIDAK", label:"TIDAK ❌"}]} />
-                  <CustomSelect label="Sembelih di Luar MMI?" name="penyaluran" value={hwn.penyaluran} options={[{val:"LUAR", label:"YA, BERSEDIA 🌍"}, {val:"DALAM", label:"TIDAK (HARUS DI MMI) 🏢"}]} />
+                  <CustomSelect label="Hadir Melihat?" name="melihat" value={hwn.melihat} options={[{val:"YA", label:"YA 👀"}, {val:"TIDAK", label:"TIDAK ❌"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => handleSelect("melihat", val)} />
+                  <CustomSelect label="Ikut Menyembelih?" name="menyembelih" value={hwn.menyembelih} options={[{val:"YA", label:"YA 🔪"}, {val:"TIDAK", label:"TIDAK ❌"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => handleSelect("menyembelih", val)} />
+                  <CustomSelect label="Sembelih di Luar MMI?" name="penyaluran" value={hwn.penyaluran} options={[{val:"LUAR", label:"YA, BERSEDIA 🌍"}, {val:"DALAM", label:"TIDAK (HARUS DI MMI) 🏢"}]} openDropdown={openDropdown} setOpenDropdown={setOpenDropdown} onSelect={(val: any) => handleSelect("penyaluran", val)} />
                   <div className="space-y-1.5 flex flex-col">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Jml Bagian (Bungkus)</label>
                     <input type="number" name="jml_bagian" value={hwn.jml_bagian} onChange={handleChange} placeholder="1" className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-bold outline-none focus:border-emerald-500 transition-all" />
@@ -256,6 +282,9 @@ export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string })
                     <CustomSelect 
                         label="Permintaan Bagian Daging" name="opsi_pesan" value={hwn.opsi_pesan} 
                         options={[{val:"PASRAH", label:"DISERAHKAN KE PANITIA"}, {val:"KHUSUS", label:"ADA PERMINTAAN KHUSUS"}]} 
+                        openDropdown={openDropdown}
+                        setOpenDropdown={setOpenDropdown}
+                        onSelect={(val: any) => handleSelect("opsi_pesan", val)}
                     />
                     
                     {hwn.opsi_pesan === "KHUSUS" && (
@@ -267,6 +296,9 @@ export default function FormHewanDrawer({ defaultNkw }: { defaultNkw?: string })
                             <CustomSelect 
                                 label="Pengambilan Bagian" name="pengambilan_pesan" value={hwn.pengambilan_pesan} 
                                 options={[{val:"AMBIL", label:"AMBIL SENDIRI KE MMI"}, {val:"DIANTAR", label:"DIANTAR KE ALAMAT"}]} 
+                                openDropdown={openDropdown}
+                                setOpenDropdown={setOpenDropdown}
+                                onSelect={(val: any) => handleSelect("pengambilan_pesan", val)}
                             />
                         </div>
                     )}

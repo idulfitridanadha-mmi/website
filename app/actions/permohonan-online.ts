@@ -1,14 +1,14 @@
 "use server";
 
 import { PrismaClient } from "@prisma/client";
-import { getActiveHijriYear } from "@/app/lib/hijri";
+
 
 const prisma = new PrismaClient();
 
 export async function submitPermohonanOnline(payload: any) {
   try {
     // Kita simpan ke "Kamar Tunggu" (tabel permohonan_online)
-    const permohonan = await prisma.permohonanOnline.create({
+    await prisma.permohonanOnline.create({
       data: {
         nama_lengkap: payload.nama_lengkap,
         telepon: payload.telepon,
@@ -220,12 +220,11 @@ export async function verifyPermohonan(id_permohonan: string, action: "ACC" | "D
             status_bayar: "BELUM LUNAS",
             bukti_bayar: permohonan.bukti_bayar,
             
-            melihat: hwn.melihat,
-            menyembelih: hwn.menyembelih,
-            pindah_sapi: hwn.pindah_sapi,
-            
+            melihat: hwn.melihat === "YA" || hwn.melihat === true,
+            menyembelih: hwn.menyembelih === "YA" || hwn.menyembelih === true,
+            pindah_sapi: hwn.pindah_sapi === "YA" || hwn.pindah_sapi === true,
             penyaluran: hwn.penyaluran,
-            penyaluran_luar: hwn.penyaluran === "LUAR",
+            penyaluran_luar: hwn.penyaluran_luar === "YA" || hwn.penyaluran_luar === true || hwn.penyaluran === "LUAR",
             jml_bagian: parseInt(hwn.jml_bagian) || 1,
             
             opsi_pesan: hwn.opsi_pesan,

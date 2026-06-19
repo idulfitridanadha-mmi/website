@@ -16,26 +16,31 @@ const handler = NextAuth({
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
 
-        // Cari user di database Supabase
-        const user = await prisma.user.findUnique({
-          where: { username: credentials.username }
-        });
+        try {
+          // Cari user di database Supabase
+          const user = await prisma.user.findUnique({
+            where: { username: credentials.username }
+          });
 
-        // Kalau user nggak ketemu
-        if (!user) return null;
+          // Kalau user nggak ketemu
+          if (!user) return null;
 
-        // Cocokin password yang diketik sama password hash di database
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+          // Cocokin password yang diketik sama password hash di database
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
-        if (!isPasswordValid) return null;
+          if (!isPasswordValid) return null;
 
-        // Kalau sukses, balikin data ini ke session
-        return {
-          id: user.id,
-          name: user.nama,
-          username: user.username,
-          role: user.role
-        };
+          // Kalau sukses, balikin data ini ke session
+          return {
+            id: user.id,
+            name: user.nama,
+            username: user.username,
+            role: user.role
+          };
+        } catch (error) {
+          console.error("[NextAuth] Fatal error in authorize callback:", error);
+          throw new Error("DatabaseConnectionError");
+        }
       }
     })
   ],
